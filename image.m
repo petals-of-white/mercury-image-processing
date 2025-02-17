@@ -5,17 +5,21 @@
 
 :- interface.
 
-:- import_module shape, list.
+:- import_module shape, list, array2d, array.
 
-:- type image(T).
+:- type image(T)    --->  image(pixel_array::array(T), image_size::size).
 
 :- func map((func(A) = B), image(A)) = image(B).
 
 :- pred get_pixel(image(T)::in, point2d::in, T::out) is semidet.
 
+:- func det_get_pixel(image(T), point2d) = T.
+
 :- pred set_pixel(point2d::in, T::in, image(T)::di, image(T)::out) is semidet.
 
 :- pred from_lists(list(list(T))::in, image(T)::out) is semidet.
+
+:- pred to_array2d(image(T)::di, array2d(T)::out) is det.
 
 :- pred minimum(image(T)::in, T::out) is semidet.
 
@@ -23,9 +27,8 @@
 
 :- implementation.
 
-:- import_module array, int.
+:- import_module int.
 
-:- type image(T)    --->  image(array(T), size).
 
 map(F, image(Arr, Size)) = OutputImg :-
     NewArr = array.map(F, Arr),
@@ -35,12 +38,18 @@ get_pixel(image(Arr, Size), Point, Pixel) :-
     LinearCoord = (Point^y * Size^height) + (Point^x),
     array.semidet_lookup(Arr, LinearCoord, Pixel).
 
+det_get_pixel(image(Arr, Size), Point) = Pixel :-
+    (LinearCoord = (Point^y * Size^height) + (Point^x),
+    Pixel = array.lookup(Arr, LinearCoord)).
+
 set_pixel(Point, Pixel, InputImg, OutputImg) :-
     InputImg = image(InputArr, Size),
     LinearCoord = (Point^y * Size^height) + (Point^x),
     array.semidet_set(LinearCoord, Pixel, InputArr, OutputArr),
     OutputImg = image(OutputArr, Size).    
 
+to_array2d(image(Arr, Size), Array2D) :-
+    Array2D = array2d.from_array(Size^height, Size^width, Arr).
 
 % Row major
 from_lists([], Image) :- Image = image(make_empty_array, size(0,0)).
