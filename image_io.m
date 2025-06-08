@@ -4,6 +4,7 @@
 :- import_module string, io, image, generic, pixel.
 
 :- type foreing_bitmap.
+
 :- pragma foreign_type("C#", foreing_bitmap, "AnyBitmap").
 
 :- pred save_bmp(string::in, image(T)::in, io::di, io::uo) is det <= convertible_pixels(T, rgb(uint8)).

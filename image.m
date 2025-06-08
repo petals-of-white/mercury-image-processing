@@ -9,17 +9,24 @@
 
 :- type image(T)    --->  image(pixel_array::array(T), image_size::size).
 
+:- inst image ---> image(array, ground).
+:- mode image_di == di(image).
+:- mode image_ui == in(image).
+:- mode image_uo == out(image).
+
 :- func init(size, T) = image(T).
 
-:- func generate(size, (func(point2d) = T)) = image(T).
+:- func generate(size::in, (func(point2d) = T)::(func(in)=out is det)) = (image(T)::image_uo) is det.
 
-:- func map((func(A) = B), image(A)) = image(B).
+:- func map((func(A) = B)::(func(in)=out is det), image(A)::image_ui) = (image(B)::image_uo) is det.
 
-:- pred get_pixel(image(T)::in, point2d::in, T::out) is semidet.
+:- pred get_pixel(image(T)::image_ui, point2d::in, T::out) is semidet.
 
-:- func det_get_pixel(image(T), point2d) = T.
+:- func det_get_pixel(image(T)::image_ui, point2d::in) = (T::out) is det.
 
-:- pred set_pixel(point2d::in, T::in, image(T)::di, image(T)::out) is semidet.
+:- pred set_pixel(point2d::in, T::in, image(T)::image_di, image(T)::image_uo) is semidet.
+
+:- pred det_set_pixel(point2d::in, T::in, image(T)::image_di, image(T)::image_uo) is det.
 
 :- pred minimum(image(T)::in, T::out) is semidet.
 :- pred maximum(image(T)::in, T::out) is semidet.
@@ -61,6 +68,12 @@ set_pixel(Point, Pixel, InputImg, OutputImg) :-
     array.semidet_set(LinearCoord, Pixel, InputArr, OutputArr),
     OutputImg = image(OutputArr, Size).    
 
+det_set_pixel(Point, Pixel, InputImg, OutputImg) :-
+    InputImg = image(InputArr, Size),
+    LinearCoord = (Point^y * Size^height) + (Point^x),
+    array.set(LinearCoord, Pixel, InputArr, OutputArr),
+    OutputImg = image(OutputArr, Size).
+   
 to_array2d(image(Arr, Size), Array2D) :-
     Array2D = array2d.from_array(Size^height, Size^width, Arr).
 
